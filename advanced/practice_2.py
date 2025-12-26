@@ -49,13 +49,6 @@ def user_input(): # создаем функцию для ввода пользо
             return float(d1), float(d2), float(h), float(v_sand), float(n), float(theta1) # возвращаем в виде кортежа
 
 
-def validate_input_is_alpha(take_input):
-    if any(char.isalpha() for char in take_input):
-        print("Данное значение должно состоять только из цифр")
-        return False
-    return True
-
-
 def convert_foot_to_mile(foot): # создаем функцию для конвертации футов в мили
     return foot / 5280
 
@@ -89,7 +82,7 @@ def time_calculate(l_1, l_2, v_sand, n):
     return t_sec
 
 
-def convert_hour_to_sec(hour): # переводим часы в секунды. изначально не работало, т.к забыл об этом
+def convert_hour_to_sec(hour):
     return hour * 3600
 
 
