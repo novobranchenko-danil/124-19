@@ -1,4 +1,15 @@
+'''
+Перепишите код из Задания 2, используя циклы для подбора оптимального значения угла, под которым необходимо начать
+движение спасателя.
+Решите данную задачу аналитически (выведите формулу зависимости угла от остальных параметров) и сравните её решение с
+решением, полученным числовым способом при помощи вашей программы.
+
+Касаемо аналитического решения я нашел, что тут в теории подойдет Закон Снеллиуса, но я запутался в формулах и в том,
+какие из наших значений к чему относятся. Другое решение я не нашел
+'''
+
 import math as m
+import numpy as np
 
 VALIDATIONS = {
     "d1": lambda x: x and
@@ -86,13 +97,32 @@ def convert_hour_to_sec(hour):
     return hour * 3600
 
 
+def brute_search(d1, d2, h, v_sand, n): # подбираем угол theta с помощью перебора
+    best_theta = 0.0
+    best_time = float('inf')
+
+    for theta in np.arange(0, 90.1, 0.1):
+        x = x_calculate(d1, theta)
+        l_1 = l1_calculate(x, d1)
+        l_2 = l2_calculate(h, x, d2)
+        current_time = time_calculate(l_1, l_2, v_sand, n)
+        if current_time < best_time:
+            best_time = current_time
+            best_theta = theta
+    return best_time, best_theta
+
+
 def main():
     d1, d2, h, v_sand, n, theta1 = user_input()
     x = x_calculate(d1, theta1)
     l_1 = l1_calculate(x, d1)
     l_2 = l2_calculate(h, x, d2)
     t = time_calculate(l_1, l_2, v_sand, n)
+    best_time, best_theta = brute_search(d1, d2, h, v_sand, n)
     print(f"Если спасатель начнёт движение под углом θ₁, равным {int(theta1)} градусам, он достигнет утопающего через {t:.1f} секунды")
+    print("=" * 50)
+    print(f"Лучшие показатели будут если спасатель начнет движение под углом θ₁, равным {int(best_theta)} градусам, "
+          f"тогда он достигнет утопающего через {best_time:.1f} секунды")
 
 
 def unit_test():
@@ -100,6 +130,7 @@ def unit_test():
 
     passed = 0
     failed = 0
+    tests = 0
 
     print("=" * 50)
     print("Запуск модульных тестов...")
@@ -110,9 +141,11 @@ def unit_test():
     # print(actual_x) # для отладки
     if expected_x == actual_x:
         passed += 1
+        tests += 1
         print("Test passed!")
     else:
         failed += 1
+        tests += 1
         print("Test failed.")
 
     '''Тест на проверку значения "l_1"'''
@@ -121,9 +154,11 @@ def unit_test():
     # print(actual_l1) # для отладки
     if expected_l1 == actual_l1:
         passed += 1
+        tests += 1
         print("Test passed!")
     else:
         failed += 1
+        tests += 1
         print("Test failed.")
 
     '''Тест на проверку значения "l_2"'''
@@ -132,9 +167,11 @@ def unit_test():
     # print(actual_l2) # для отладки
     if extected_l2 == actual_l2:
         passed += 1
+        tests += 1
         print("Test passed!")
     else:
         failed += 1
+        tests += 1
         print("Test failed.")
 
     '''Тест на проверку значения "t"'''
@@ -143,12 +180,25 @@ def unit_test():
     # print(actual_t) # для отладки
     if expected_t == actual_t:
         passed += 1
+        tests += 1
         print("Test passed!")
     else:
         failed += 1
+        tests += 1
         print("Test failed.")
 
-    print(f"Всего тестов: {4}\nУспешных тестов: {passed}\nНеуспешных тестов: {failed}")
+    '''Тест на сравнение того, что методом подбора θ₁ мы спасаем утопающего за меньшее время'''
+    standart_time = 39.87067379369796
+    best_time = brute_search(d1, d2, h, v_sand, n)
+    if standart_time > best_time[0]:
+        passed += 1
+        tests += 1
+        print("Test passed!")
+    else:
+        failed += 1
+        tests += 1
+        print("Test failed.")
+    print(f"Всего тестов: {tests}\nУспешных тестов: {passed}\nНеуспешных тестов: {failed}")
 
 
 if __name__ == "__main__":
