@@ -1,18 +1,8 @@
-import os
+import glob
 import filecmp
 import math
 from PIL import Image, ImageDraw
-
-INPUT_FILE = "init.csv"
-OUTPUT_FILE_CSV = "generation.csv"
-OUTPUT_TEST_FILE_CSV = os.path.join(f"{os.getcwd()}", "unit test file", "test_output_generation.csv")
-OUTPUT_FILE_PNG = "generation.png"
-OUTPUT_FILE_GIF = "generation.gif"
-GENERATIONS = 10
-BORDER = 2
-CELL_SIZE = 100
-FONT_SIZE = max(10, CELL_SIZE // 4)
-DEBUG = False
+from config import *
 
 
 def live_neighbors(grid, row, col):
@@ -69,63 +59,46 @@ def model(grid):
             3. Any live cell with more than three live neighbours dies, as if by overpopulation.
             4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
     '''
-    try:
-        rows, cols = len(grid), len(grid[0])
-        new_grid = [[0 for _ in range(cols)] for _ in range(rows)]
-        for row in range(rows):
-            for col in range(cols):
-                live_nb = live_neighbors(grid, row, col)
-                # Rule 1
-                if live_nb < 2 and grid[row][col] != 0:
-                    new_grid[row][col] = 0
-                # Rule 2
-                elif 2 <= live_nb <= 3 and grid[row][col] != 0:
-                    new_grid[row][col] = grid[row][col] + 1
-                # Rule 3
-                elif live_nb > 3 and grid[row][col] != 0:
-                    new_grid[row][col] = 0
-                # Rule 4
-                elif grid[row][col] == 0 and live_nb == 3:
-                    new_grid[row][col] = 1
-                else:
-                    new_grid[row][col] = 0
-        return new_grid
-    except IndexError:
-        raise IndexError("Файл должен содержать как минимум две строки с числами rows и cols\n"
-                         f"Подробности в {os.getcwd()}\README.md")
-
-
-def read_input_init_v2(filename):
-    '''
-    Образец функции для init файлов по типу init_v2.csv
-    '''
-    grid = []
-    with open(filename, "r") as input_file:
-        lines = input_file.readlines()
-        for line in lines:
-            line = line.strip()
-            line = line.split(";")
-            line = [int(elem) for elem in line]
-            grid.append(line)
-    return grid
+    rows, cols = len(grid), len(grid[0])
+    new_grid = [[0 for _ in range(cols)] for _ in range(rows)]
+    for row in range(rows):
+        for col in range(cols):
+            live_nb = live_neighbors(grid, row, col)
+            # Rule 1
+            if live_nb < 2 and grid[row][col] != 0:
+                new_grid[row][col] = 0
+            # Rule 2
+            elif 2 <= live_nb <= 3 and grid[row][col] != 0:
+                new_grid[row][col] = grid[row][col] + 1
+            # Rule 3
+            elif live_nb > 3 and grid[row][col] != 0:
+                new_grid[row][col] = 0
+            # Rule 4
+            elif grid[row][col] == 0 and live_nb == 3:
+                new_grid[row][col] = 1
+            else:
+                new_grid[row][col] = 0
+    return new_grid
 
 
 def read_input(filename=INPUT_FILE):
     '''
-    :param filename:
-    :return:
+    @requires: filename is a string path to an existing CSV file
+               file format: first line = rows, second line = cols,
+               subsequent lines = "row,col" coordinates (1-indexed)
+    @modifies: None
+    @effects:  reads file, prints grid to console
+    @raises:   FileNotFoundError if file doesn't exist
+               ValueError if file format is invalid
+    @returns:  2D list (grid) where grid[row][col] = 0 or 1
     '''
     with open(filename, "r") as input_file:
         lines = input_file.readlines()
         grid = []
-        try:
-            rows = int(lines[0].strip())
-            cols = int(lines[1].strip())
-            grid = [[0 for _ in range(cols)] for _ in range(rows)]
-            # print(f"rows = {rows} cols = {cols}")
-        except IndexError:
-            raise IndexError("Файл должен содержать как минимум две строки с числами rows и cols\n"
-                             f"Подробности в {os.getcwd()}\README.md")
+
+        rows = int(lines[0].strip())
+        cols = int(lines[1].strip())
+        grid = [[0 for _ in range(cols)] for _ in range(rows)]
 
         for line in lines[2:]:
             line = line.strip()
@@ -141,10 +114,14 @@ def read_input(filename=INPUT_FILE):
 
 def write_output(grid, gen, filename=OUTPUT_FILE_CSV):
     '''
-    :param grid:
-    :param gen:
-    :param filename:
-    :return:
+    @requires: grid is a 2D list of integers (0 or 1)
+               gen is an integer generation number
+               filename is a string for output file path
+    @modifies: creates/overwrites file at filename
+    @effects:  writes grid to file, prints grid to console
+    @raises:   PermissionError if no write access to file
+               TypeError if grid contains non-integers
+    @returns:  None
     '''
     with open(filename, "a+") as output_file:
         output_file.write(f"Generation {gen}\n")
@@ -161,11 +138,17 @@ def write_output(grid, gen, filename=OUTPUT_FILE_CSV):
 
 def write_png(grid, gen_count=0, filename=OUTPUT_FILE_PNG):
     '''
-    :param grid:
-    :param gen_count:
-    :param filename:
-    :param cell_age:
-    :return:
+    @requires: grid is a 2D list of integers
+               gen_count is a non-negative integer
+               filename is a valid string for file naming
+               CELL_SIZE, BORDER, FONT_SIZE are defined constants > 0
+               gradient_color() function is defined
+    @modifies: creates PNG file on disk
+    @effects:  draws grid visualization with borders and generation text
+    @raises:   ValueError if grid is empty or CELL_SIZE/BORDER invalid
+               OSError if cannot save file (disk full, permissions)
+               AttributeError if PIL not installed or missing methods
+    @returns:  PIL Image object of the visualization
     '''
     rows, cols = len(grid), len(grid[0])
     # print(f"rows = {rows} cols = {cols}")
@@ -217,6 +200,18 @@ def gradient_color(age, max_age=GENERATIONS):
 
 
 def write_gif(frames, filename=OUTPUT_FILE_GIF, duration=500, loop=0):
+    '''
+    @requires: frames is a non-empty list of PIL Image objects
+               filename is a string with .gif extension
+               duration > 0 (milliseconds per frame)
+               loop >= 0 (0 = infinite loop, n = n cycles)
+    @modifies: creates GIF file on disk
+    @effects:  saves animated GIF from frames
+    @raises:   ValueError if frames empty or duration/loop invalid
+               OSError if cannot save file
+               AttributeError if frames not PIL Images
+    @returns:  None
+    '''
     if not frames:
         return
 
@@ -229,24 +224,25 @@ def write_gif(frames, filename=OUTPUT_FILE_GIF, duration=500, loop=0):
         optimize=True)
 
 
-def remove_output_file_csv(filename):
-    if os.path.exists(filename):
-        os.remove(filename)
-        print(f"Удалили старый csv файл генерации: {filename}")
+def remove_output_csv_file():
+    existing_files = [f for f in glob.glob("**/*generation.csv", recursive=True) if os.path.exists(f)]
+    if existing_files:
+        for f in existing_files:
+            os.remove(f)
+        print(f"Удалили {len(existing_files)} старых csv файл генерации: {existing_files}")
 
 
-def remove_output_file_png(filename):
-    for generation in range(GENERATIONS):
-        if os.path.exists(f"{generation:03d}_init_grid.png"):
-            os.remove(f"{generation:03d}_init_grid.png")
-        if os.path.exists(f"{generation+1:03d}_{OUTPUT_FILE_PNG}"):
-            os.remove(f"{generation+1:03d}_{OUTPUT_FILE_PNG}")
-        if os.path.exists(OUTPUT_FILE_GIF):
-            os.remove(OUTPUT_FILE_GIF)
-    print(f"Удалили старые png и gif файлы генераций: {filename}")
-# TODO чистить все файлы с расширением png и gif посмотреть как
+def remove_output_png_gif_file():
+    existing_files = [f for f in glob.glob("**/*.png", recursive=True) +
+                      glob.glob("**/*.gif", recursive=True) if os.path.exists(f)]
+    if existing_files:
+        for f in existing_files:
+            os.remove(f)
+        print(f"Удалили {len(existing_files)} старых png и gif файлов: {existing_files}")
 
 
+remove_output_csv_file()
+remove_output_png_gif_file()
 if DEBUG:
     grid = [[0, 1, 0],
             [0, 0, 0],
@@ -276,7 +272,7 @@ if DEBUG:
     expected = [[0, 1, 0],
                 [1, 1, 1],
                 [0, 1, 0]]
-    actual = read_input(os.path.join(f"{os.getcwd()}", "unit test file", "test_input.csv"))
+    actual = read_input(filename=os.path.join(f"{os.getcwd()}", "unit test file", "test_input.csv"))
     if actual != expected:
         print("Test read_input failed!")
 
@@ -284,17 +280,29 @@ if DEBUG:
             [0, 0, 0],
             [1, 1, 0]]
     gen = 1
-    remove_output_file_csv(OUTPUT_TEST_FILE_CSV)
-    write_output(grid, gen, OUTPUT_TEST_FILE_CSV)
+    write_output(grid, gen, TEMP_OUTPUT_FILE_CSV)
     expected = os.path.join(f"{os.getcwd()}", "unit test file", "test_output_expected.csv")
-    actual = OUTPUT_TEST_FILE_CSV
+    actual = TEMP_OUTPUT_FILE_CSV
     if not filecmp.cmp(expected, actual, shallow=False):
         print("Test write_output failed!")
+    os.remove(actual)
 
-    # придумать тесты для функций write png и write gif
+    grid = [[0, 1], [1, 0]]
+    write_png(grid, gen_count=1, filename="test.png")
+    expected_file = "001_test.png"
+    if not os.path.exists(expected_file):
+        print("Test write_png failed!")
+    os.remove(expected_file)
+
+    grid = [[0, 1, 0], [1, 0, 1]]
+    image = write_png(grid, filename="test.png")
+    expected_file = "000_test.png"
+    expected_width = 3*(CELL_SIZE+BORDER)+BORDER
+    expected_height = 2*(CELL_SIZE+BORDER)+BORDER
+    if image.size != (expected_width, expected_height):
+        print("Test write_png failed!")
+    os.remove(expected_file)
 else:
-    remove_output_file_csv(OUTPUT_FILE_CSV)
-    remove_output_file_png(OUTPUT_FILE_PNG)
     try:
         frames = []
         grid = read_input()
@@ -306,5 +314,7 @@ else:
             frame = write_png(grid, generation + 1)
             frames.append(frame)
         write_gif(frames)
-    except IndexError as ex:
-        print(ex)
+    except (IndexError, ValueError):
+        print("Файл должен содержать как минимум две строки с числами rows и cols\n"
+              f"Подробности в {os.getcwd()}\README.md")
+
