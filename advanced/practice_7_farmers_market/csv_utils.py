@@ -1,89 +1,10 @@
 import csv
-from enum import IntEnum
-
-
-class MarketsIndex(IntEnum):
-    # ===== ОСНОВНАЯ ИНФОРМАЦИЯ =====
-    FMID = 0  # ID рынка (уникальный идентификатор)
-    MARKET_NAME = 1  # Название рынка
-
-    # ===== СОЦИАЛЬНЫЕ СЕТИ И КОНТАКТЫ =====
-    WEBSITE = 2  # Вебсайт
-    FACEBOOK = 3  # Facebook
-    TWITTER = 4  # Twitter
-    YOUTUBE = 5  # YouTube
-    OTHER_MEDIA = 6  # Другие медиа
-
-    # ===== АДРЕС =====
-    STREET = 7  # Улица
-    CITY = 8  # Город
-    COUNTY = 9  # Округ
-    STATE = 10  # Штат
-    ZIP = 11  # Почтовый индекс
-
-    # ===== СЕЗОНЫ РАБОТЫ =====
-    SEASON1_DATE = 12  # Даты сезона 1
-    SEASON1_TIME = 13  # Время сезона 1
-    SEASON2_DATE = 14  # Даты сезона 2
-    SEASON2_TIME = 15  # Время сезона 2
-    SEASON3_DATE = 16  # Даты сезона 3
-    SEASON3_TIME = 17  # Время сезона 3
-    SEASON4_DATE = 18  # Даты сезона 4
-    SEASON4_TIME = 19  # Время сезона 4
-
-    # ===== ГЕОГРАФИЯ =====
-    X = 20  # Координата X (долгота)
-    Y = 21  # Координата Y (широта)
-    LOCATION = 22  # Локация (описание)
-
-    # ===== МЕТОДЫ ОПЛАТЫ =====
-    CREDIT = 23  # Принимают кредитные карты (Y/N)
-    WIC = 24  # Принимают WIC (Women, Infants, Children)
-    WIC_CASH = 25  # Принимают WIC cash
-    SFMNP = 26  # Senior Farmers' Market Nutrition Program
-    SNAP = 27  # Принимают SNAP (фуд-стемпы)
-
-    # ===== ОРГАНИЧЕСКИЕ ПРОДУКТЫ =====
-    ORGANIC = 28  # Органические продукты (Y/N)
-
-    # ===== ТИПЫ ПРОДУКТОВ =====
-    BAKED_GOODS = 29  # Выпечка
-    CHEESE = 30  # Сыр
-    CRAFTS = 31  # Ремесленные изделия
-    FLOWERS = 32  # Цветы
-    EGGS = 33  # Яйца
-    SEAFOOD = 34  # Морепродукты
-    HERBS = 35  # Травы
-    VEGETABLES = 36  # Овощи
-    HONEY = 37  # Мед
-    JAMS = 38  # Варенье, джемы
-    MAPLE = 39  # Кленовый сироп
-    MEAT = 40  # Мясо
-    NURSERY = 41  # Саженцы, рассада
-    NUTS = 42  # Орехи
-    PLANTS = 43  # Растения
-    POULTRY = 44  # Птица
-    PREPARED = 45  # Готовая еда
-    SOAP = 46  # Мыло
-    TREES = 47  # Деревья
-    WINE = 48  # Вино
-    COFFEE = 49  # Кофе
-    BEANS = 50  # Бобы
-    FRUITS = 51  # Фрукты
-    GRAINS = 52  # Зерновые
-    JUICES = 53  # Соки
-    MUSHROOMS = 54  # Грибы
-    PET_FOOD = 55  # Корм для животных
-    TOFU = 56  # Тофу
-    WILD_HARVESTED = 57  # Дикорастущие продукты
-
-    # ===== ДАТА ОБНОВЛЕНИЯ =====
-    UPDATE_TIME = 58  # Время последнего обновления
-
-
-class State: # todo возможно нам класс и не нужен этот? просто в get page перенести все, до начала цикла
-    current_page = 0
-    page_size = 10
+import console_handler as ch
+import data_handler as dh
+import authorization as auth
+import utils as u
+import reviews as rw
+from enums import MarketIndex as idx
 
 
 def read_csv_file():
@@ -92,3 +13,209 @@ def read_csv_file():
         next(csv_reader)
         markets_info = [[field.strip() for field in row] for row in csv_reader]
     return markets_info
+
+
+def search_market_by_params(search_value, search_type, search_field):
+    """
+    Поиск рынков по заданным параметрам.
+
+    Args:
+        search_value (str or tuple): Значение для поиска:
+            - str: для exact/contains (zip, fmid, market_name)
+            - tuple: для both (city, state)
+        search_type (str): Тип поиска:
+            - "exact": точное совпадение
+            - "contains": частичное совпадение
+            - "both": поиск по двум полям (город + штат)
+        search_field (str or tuple): Поле(я) для поиска:
+            - str: для exact/contains ("fmid", "zip_code", "market_name")
+            - tuple: для both ("state", "city")
+    """
+
+    results = []
+    field_map = {
+        'fmid': idx.FMID,
+        'zip_code': idx.ZIP,
+        'market_name': idx.MARKET_NAME,
+        'state': idx.STATE,
+        'city': idx.CITY
+    }
+
+    for market in markets_db:
+        if search_type == "exact":
+            match = market[field_map[search_field]] == search_value
+        elif search_type == "contains":
+            match = search_value in market[field_map[search_field]]
+        elif search_type == "both":
+            state, city = search_value
+            match = market[field_map[search_field[0]]] == state and market[field_map[search_field[1]]] == city
+        else:
+            match = False
+
+        if match:
+            results.append({
+                'fmid': market[idx.FMID],
+                'market_name': market[idx.MARKET_NAME],
+                'state': market[idx.STATE],
+                'city': market[idx.CITY],
+                'zip': market[idx.ZIP],
+                'website': market[idx.WEBSITE],
+                'avg.rating': rw.get_avg_rating(market[idx.FMID])
+            })
+
+    if not results:
+        ch.clear_console()
+        ch.print_market_not_found()
+        return
+
+    kwargs = {'len_base': len(results)}
+    if search_field == 'fmid':
+        kwargs['fmid'] = search_value
+        results.sort(key=lambda x: x['fmid'])
+    elif search_field == 'market_name':
+        kwargs['market_name'] = search_value
+        results.sort(key=lambda x: x['market_name'])
+    elif search_field == 'zip_code':
+        kwargs['zip_code'] = search_value
+        results.sort(key=lambda x: x['zip'])
+    else:
+        kwargs['state'] = state
+        kwargs['city'] = city
+        results.sort(key=lambda x: x['state'])
+
+    dh.get_page("search", markets_base=results, **kwargs, page_size=5)
+
+
+def search_nearby_markets(search_value, search_type, search_field, max_miles=30):
+    """
+    Поиск рынков по заданным параметрам.
+
+    Args:
+        search_value (str or tuple): Значение для поиска:
+            - str: для exact/contains (zip, fmid, market_name)
+            - tuple: для both (city, state)
+        search_type (str): Тип поиска:
+            - "exact": точное совпадение
+            - "contains": частичное совпадение
+            - "both": поиск по двум полям (город + штат)
+        search_field (str or tuple): Поле(я) для поиска:
+            - str: для exact/contains ("fmid", "zip_code", "market_name")
+            - tuple: для both ("state", "city")
+    """
+
+    results = []
+    center_market = None
+    field_map = {
+        'fmid': idx.FMID,
+        'zip_code': idx.ZIP,
+        'market_name': idx.MARKET_NAME,
+        'state': idx.STATE,
+        'city': idx.CITY
+    }
+
+    for market in markets_db:
+        if search_type == "exact":
+            if market[field_map[search_field]] == search_value:
+                center_market = market
+                break
+        elif search_type == "contains":
+            if search_value in market[field_map[search_field]]:
+                center_market = market
+                break
+        elif search_type == "both":
+            state, city = search_value
+            if market[field_map[search_field[0]]] == state and market[field_map[search_field[1]]] == city:
+                center_market = market
+                break
+
+    if not center_market:
+        ch.clear_console()
+        ch.print_market_not_found()
+        return
+
+    center_lat = float(center_market[idx.Y])
+    center_lon = float(center_market[idx.X])
+
+    for market in markets_db:
+        if not market[idx.Y] or not market[idx.X]:
+            continue
+
+        market_lat = float(market[idx.Y])
+        market_lon = float(market[idx.X])
+
+        distance = u.get_distance(center_lat, center_lon, market_lat, market_lon)
+
+        if distance <= max_miles:
+            results.append({
+                'fmid': market[idx.FMID],
+                'market_name': market[idx.MARKET_NAME],
+                'city': market[idx.CITY],
+                'state': market[idx.STATE],
+                'website': market[idx.WEBSITE],
+                'zip': market[idx.ZIP],
+                'distance': round(distance, 1),
+                'avg.rating': rw.get_avg_rating(market[idx.FMID])
+            })
+
+    kwargs = {'len_base': len(results)}
+    if search_field == 'fmid':
+        kwargs['fmid'] = search_value
+    elif search_field == 'market_name':
+        kwargs['market_name'] = search_value
+    elif search_field == 'zip_code':
+        kwargs['zip_code'] = search_value
+    else:
+        kwargs['state'] = state
+        kwargs['city'] = city
+
+    results.sort(key=lambda x: x['distance'])
+    dh.get_page("nearby", markets_base=results, **kwargs, page_size=5)
+
+
+def view_market_details(user_cmd, markets_base):
+    ch.clear_console()
+    results = {}
+    while True:
+        for market in markets_db:
+            if market[idx.FMID] == markets_base[user_cmd - 1]['fmid']:
+                for field in idx:
+                    results[field.name] = market[field.value]
+                break
+        if not results:
+            ch.details_not_found()
+        else:
+            average_rating = rw.get_avg_rating(results[idx.FMID.name])
+            ch.print_detail_information(results, average_rating)
+            ch.print_detail_description()
+            user_input = input("> ")
+            if user_input == "q":
+                ch.clear_console()
+                break
+            elif user_input == "c":
+                if not auth.authorization():
+                    continue
+                rw.write_comment(results)
+            elif user_input == "v":
+                rw.view_reviews_markets(results[idx.FMID.name], results[idx.MARKET_NAME.name])
+            else:
+                ch.clear_console()
+                ch.print_command(user_input)
+                ch.print_invalid_command()
+                ch.print_newline()
+
+
+def search_all_markets():
+    results = []
+    for market in markets_db:
+        if not market[idx.MARKET_NAME]:
+            continue
+        results.append({
+            'fmid': market[idx.FMID],
+            'name': market[idx.MARKET_NAME],
+            'avg.rating': rw.get_avg_rating(market[idx.FMID])
+        })
+    results.sort(key=lambda x: x['name'])
+    dh.get_page("markets_list", markets_base=results, page_size=30)
+
+
+markets_db = read_csv_file()

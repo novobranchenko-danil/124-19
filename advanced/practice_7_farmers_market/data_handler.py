@@ -1,159 +1,89 @@
-from csv_utils import read_csv_file
-from csv_utils import MarketsIndex as idx
-from csv_utils import State as s
-import utils as u
 import console_handler as ch
-markets_db = read_csv_file()
+import csv_utils as csv
 
 
-def get_page(print_function, markets_base, **kwargs): # todo подумать как разбить на более мелкие
-    s.current_page = 0 # todo возможно нам класс и не нужен этот? просто сюда перенести все, до начала цикла
+def get_page(page_function, markets_base, current_page=0, page_size=10, **kwargs):
+    ch.clear_console()
     while True:
-        u.clear_console()
-
-        start = s.current_page * s.page_size # TODO добавить возможность в консоли менять отображение записей на странице из ряда стандартных значений
-        end = start + s.page_size
+        start = current_page * page_size
+        end = start + page_size
         page = markets_base[start:end]
 
-        total_page = (len(markets_base) + s.page_size - 1) // s.page_size
+        total_page = (len(markets_base) + page_size - 1) // page_size
 
-        if 'len_base' in kwargs:
-            len_base = kwargs.get('len_base')
+        if page_function == "markets_list":
+            page_markets_list(page, start)
 
-        if print_function == "print_market_page":
-            for i, market in enumerate(page, start=start+1):
-                ch.print_market_page(i, market) # TODO добавить еще вывод отзывов и рейтингов
-        if print_function == "print_market_found_nearby":
-            zip_code = kwargs.get('zip_code')
-            ch.print_count_market_found_nearby(len_base, zip_code)
-            for i, market in enumerate(page, start=start+1):
-                ch.print_market_found_nearby(i, market)
-        if print_function == "print_markets_list":
-            if 'city' in kwargs:
-                city = kwargs.get('city')
-                state = kwargs.get('state')
-                ch.print_count_market_found_by_city_state(len_base, city, state)
-            if 'zip_code' in kwargs:
-                zip_code = kwargs.get('zip_code')
-                ch.print_count_market_found_by_zip(len_base, zip_code)
-            for i, market in enumerate(page, start=start+1):
-                ch.print_markets_list(i, market)
+        if page_function == "search" or page_function == "nearby":
+            page_search_and_nearby(page_function, page, start, **kwargs)
 
-        ch.print_pagination(total_page)
+        if page_function == "reviews":
+            page_reviews(page, start, **kwargs)
+
+        ch.print_pagination(total_page, current_page)
         ch.print_pagination_description()
 
-        user_cmd = input("> ").strip().lower()
-        if user_cmd == 'n' and s.current_page < total_page - 1: # todo добавить валидацию команд
-            s.current_page += 1
-        elif user_cmd == 'p' and s.current_page > 0:
-            s.current_page -= 1
-        elif user_cmd == 'q':
-            u.clear_console()
-            break  # TODO добавить возможность навигации к конкретной странице?
-        elif user_cmd.isdigit():
-            view_market_details(int(user_cmd), markets_base)
-
-
-def search_by_city_state(city, state):
-    results = []
-    for market in markets_db:
-        if market[idx.CITY] == city and market[idx.STATE] == state:
-            results.append({
-                'fmid': market[idx.FMID],
-                'name': market[idx.MARKET_NAME],
-                'zip': market[idx.ZIP],
-                'website': market[idx.WEBSITE] # TODO наверное и сюда включить отзывы и рейтинги
-            })
-    if not results:
-        ch.print_market_not_found()
-    else:
-        get_page("print_markets_list", markets_base=results, len_base=len(results), city=city, state=state)
-
-
-def search_by_zip(zip_code):
-    results = []
-    for market in markets_db:
-        if market[idx.ZIP] == zip_code:
-            results.append({
-                'fmid': market[idx.FMID],
-                'name': market[idx.MARKET_NAME],
-                'city': market[idx.CITY],
-                'state': market[idx.STATE],
-                'website': market[idx.WEBSITE] # TODO наверное и сюда включить отзывы и рейтинги
-            })
-    if not results:
-        ch.print_market_not_found()
-    else:
-        get_page("print_markets_list", markets_base=results, len_base=len(results), zip_code=zip_code)
-
-
-def search_nearby_markets(zip_code, max_miles=30):
-    results = []
-    center_market = None
-    for market in markets_db:
-        if market[idx.ZIP] == zip_code:
-            center_market = market
+        user_input = input("> ").strip().lower()
+        if user_input == 'n' and current_page < total_page - 1:
+            ch.clear_console()
+            current_page += 1
+        elif user_input == 'p' and current_page > 0:
+            ch.clear_console()
+            current_page -= 1
+        elif user_input == 'q':
+            ch.clear_console()
             break
-    if not center_market:
-        ch.print_market_not_found()
-        return
-
-    center_lat = float(center_market[idx.Y])
-    center_lon = float(center_market[idx.X])
-
-    for market in markets_db:
-        if not market[idx.Y] or not market[idx.X]:
-            continue
-
-        market_lat = float(market[idx.Y])
-        market_lon = float(market[idx.X])
-
-        distance = u.get_distance(center_lat, center_lon, market_lat, market_lon)
-
-        if distance <= max_miles:
-            results.append({
-                'fmid': market[idx.FMID],
-                'name': market[idx.MARKET_NAME],
-                'city': market[idx.CITY],
-                'state': market[idx.STATE],
-                'website': market[idx.WEBSITE],
-                'zip': market[idx.ZIP],
-                'distance': round(distance, 1)
-            })
-
-    results.sort(key=lambda x: x['distance'])
-    get_page("print_market_found_nearby", markets_base=results, len_base=len(results), zip_code=zip_code)
-
-
-def view_market_details(user_cmd, markets_base):
-    u.clear_console()
-    results = {}
-    while True:
-        for market in markets_db:
-            if market[idx.FMID] == markets_base[user_cmd-1]['fmid']:
-                for field in idx:
-                    results[field.name] = market[field.value]
-                break
-        if not results:
-            ch.details_not_found()
+        elif user_input.isdigit():
+            csv.view_market_details(int(user_input), markets_base)
         else:
-            ch.print_detail_information(results)
-            ch.print_detail_description()
-            user_input = input("> ")
-            if user_input == "q":
-                break
-            if user_cmd == "c":
-                break # TODO доделать
+            ch.clear_console()
+            ch.print_command(user_input)
+            ch.print_invalid_command()
+            ch.print_newline()
 
 
-def search_all_markets():
-    results = []
-    for market in markets_db:
-        if not market[idx.MARKET_NAME]:
-            continue
-        results.append({
-            'name': market[idx.MARKET_NAME],
-            'fmid': market[idx.FMID]
-        })
-    results.sort(key=lambda x: x['name'])
-    get_page("print_market_page", markets_base=results)
+def page_reviews(page, start, **kwargs):
+    len_base = kwargs.get('len_base')
+    fmid = kwargs.get('fmid')
+    market_name = kwargs.get('market_name')
+
+    ch.print_count_market_reviews(len_base, fmid, market_name)
+    for i, review in enumerate(page, start=start + 1):
+        ch.print_reviews(i, review) # TODO можно так разбить
+
+
+def page_search_and_nearby(search_type, page, start, **kwargs):
+    len_base = kwargs.get('len_base')
+
+    if search_type == "nearby":
+        nearby = True
+    else:
+        nearby = False
+
+    if 'city' in kwargs:
+        city = kwargs.get('city')
+        state = kwargs.get('state')
+        ch.print_count_market_found_by_city_state(len_base, city, state, nearby)
+    if 'zip_code' in kwargs:
+        zip_code = kwargs.get('zip_code')
+        ch.print_count_market_found_by_zip(len_base, zip_code, nearby)
+    if 'fmid' in kwargs:
+        user_fmid = kwargs.get('fmid')
+        ch.print_count_market_found_by_fmid(len_base, user_fmid, nearby)
+    if 'market_name' in kwargs:
+        user_mn = kwargs.get('market_name')
+        ch.print_count_market_found_by_market_name(len_base, user_mn, nearby)
+    for i, market in enumerate(page, start=start + 1):
+        ch.print_market_list_wrapper(search_type, i, market)
+
+
+def page_markets_list(page, start):
+    for i, market in enumerate(page, start=start + 1):
+        ch.print_market_page(i, market)
+
+
+
+
+
+
+

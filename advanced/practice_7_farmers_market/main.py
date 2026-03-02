@@ -1,8 +1,10 @@
-import utils as u
+import app_controler as u
 import console_handler as ch
 
-while True:
+command = ""
+while command != "q":
     ch.print_prompt()
-    user_input = input().lower()
-    u.handle_special_commands(user_input)
-    u.command_processing(user_input)
+    command = input().lower().strip()
+    u.command_processing(command)
+
+# TODO добавить возможность выйти из программы в любой момент по команде end допустим ???
