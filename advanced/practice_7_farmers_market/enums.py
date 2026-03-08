@@ -34,6 +34,20 @@ class Menu:
         LOGIN = "2"
         BACK = "q"
 
+    class Pagination(StrEnum):
+        NEXT_PAGE = "n"
+        PREVIOUS_PAGE = "p"
+        BACK = "q"
+
+    class Details(StrEnum):
+        COMMENT = "c"
+        VIEW_REVIEW = "v"
+        DELETE = "d"
+        BACK = "q"
+
+    class Reviews(StrEnum):
+        DELETE = "d"
+
 
 class MarketIndex(IntEnum):
     # ===== ОСНОВНАЯ ИНФОРМАЦИЯ =====

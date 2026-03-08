@@ -5,6 +5,7 @@ from datetime import datetime
 import data_handler as dh
 from enums import MarketIndex as idx
 from enums import ReviewsIndex
+import authorization as auth
 
 
 def get_reviews():
@@ -88,3 +89,31 @@ def view_reviews_markets(fmid, market_name):
         ch.clear_console()
         ch.print_reviews_not_found()
         ch.print_newline()
+
+
+def delete_review(market_base, current_page, csv_filename='reviews.csv'):
+    if not auth.authorization():
+        return False
+    if market_base[current_page]['user'] != Username.username:
+        ch.clear_console()
+        ch.print_delete_review_failed()
+        ch.print_newline()
+        return False
+
+    review = market_base[current_page]
+
+    del market_base[current_page]
+
+    with open(csv_filename, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        rows = [row for row in reader
+                if not (row[header.index('date')] == review['date']
+                        and row[header.index('FMID')] == review['fmid'])]
+
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(rows)
+
+    return market_base

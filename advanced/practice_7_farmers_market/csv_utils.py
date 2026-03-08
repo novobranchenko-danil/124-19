@@ -5,6 +5,7 @@ import authorization as auth
 import utils as u
 import reviews as rw
 from enums import MarketIndex as idx
+from enums import Menu as m
 
 
 def read_csv_file():
@@ -31,7 +32,6 @@ def search_market_by_params(search_value, search_type, search_field):
             - str: для exact/contains ("fmid", "zip_code", "market_name")
             - tuple: для both ("state", "city")
     """
-
     results = []
     field_map = {
         'fmid': idx.FMID,
@@ -102,7 +102,6 @@ def search_nearby_markets(search_value, search_type, search_field, max_miles=30)
             - str: для exact/contains ("fmid", "zip_code", "market_name")
             - tuple: для both ("state", "city")
     """
-
     results = []
     center_market = None
     field_map = {
@@ -172,12 +171,13 @@ def search_nearby_markets(search_value, search_type, search_field, max_miles=30)
     dh.get_page("nearby", markets_base=results, **kwargs, page_size=5)
 
 
-def view_market_details(user_cmd, markets_base):
+def view_market_details(user_cmd, markets_base, **kwargs):
     ch.clear_console()
     results = {}
+    market_fmid = markets_base[user_cmd - 1]['fmid']
     while True:
         for market in markets_db:
-            if market[idx.FMID] == markets_base[user_cmd - 1]['fmid']:
+            if market[idx.FMID] == market_fmid:
                 for field in idx:
                     results[field.name] = market[field.value]
                 break
@@ -187,21 +187,50 @@ def view_market_details(user_cmd, markets_base):
             average_rating = rw.get_avg_rating(results[idx.FMID.name])
             ch.print_detail_information(results, average_rating)
             ch.print_detail_description()
-            user_input = input("> ")
-            if user_input == "q":
+            user_input = input()
+            if user_input == m.Details.BACK:
                 ch.clear_console()
                 break
-            elif user_input == "c":
+            elif user_input == m.Details.COMMENT:
                 if not auth.authorization():
                     continue
                 rw.write_comment(results)
-            elif user_input == "v":
+            elif user_input == m.Details.VIEW_REVIEW:
                 rw.view_reviews_markets(results[idx.FMID.name], results[idx.MARKET_NAME.name])
+            elif user_input == m.Details.DELETE:
+                if not auth.authorization():
+                    continue
+                if not auth.check_delete_market_permission():
+                    continue
+                current_page = kwargs.get('current_page')
+                new_market_base = delete_market(market_fmid, markets_base)
+                ch.clear_console()
+                return current_page, new_market_base
             else:
                 ch.clear_console()
                 ch.print_command(user_input)
                 ch.print_invalid_command()
                 ch.print_newline()
+
+
+def delete_market(fmid, markets_base):
+    for i, market in enumerate(markets_db):
+        if market[idx.FMID] == fmid:
+            del markets_db[i]
+            break
+    for i, market in enumerate(markets_base):
+        if market['fmid'] == fmid:
+            del markets_base[i]
+            break
+    # сохраняем заголовок
+    with open('Export.csv', 'r', encoding='utf-8') as f:
+        header = next(csv.reader(f))
+    # Перезаписываем файл с заголовком
+    with open('Export.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(markets_db)
+    return markets_base
 
 
 def search_all_markets():

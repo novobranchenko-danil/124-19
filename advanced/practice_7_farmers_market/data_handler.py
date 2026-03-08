@@ -1,5 +1,7 @@
 import console_handler as ch
+from enums import Menu as m
 import csv_utils as csv
+import reviews as rw
 
 
 def get_page(page_function, markets_base, current_page=0, page_size=10, **kwargs):
@@ -19,22 +21,29 @@ def get_page(page_function, markets_base, current_page=0, page_size=10, **kwargs
 
         if page_function == "reviews":
             page_reviews(page, start, **kwargs)
+            ch.print_pagination(total_page, current_page)
+            ch.print_pagination_description_reviews()
 
-        ch.print_pagination(total_page, current_page)
-        ch.print_pagination_description()
+        if page_function != "reviews":
+            ch.print_pagination(total_page, current_page)
+            ch.print_pagination_description()
 
-        user_input = input("> ").strip().lower()
-        if user_input == 'n' and current_page < total_page - 1:
+        user_input = input().strip().lower()
+        if user_input == m.Pagination.NEXT_PAGE and current_page < total_page - 1:
             ch.clear_console()
             current_page += 1
-        elif user_input == 'p' and current_page > 0:
+        elif user_input == m.Pagination.PREVIOUS_PAGE and current_page > 0:
             ch.clear_console()
             current_page -= 1
-        elif user_input == 'q':
+        elif user_input == m.Pagination.BACK:
             ch.clear_console()
             break
         elif user_input.isdigit():
-            csv.view_market_details(int(user_input), markets_base)
+            csv.view_market_details(int(user_input), markets_base, current_page=current_page)
+        elif user_input == m.Reviews.DELETE and page_function == "reviews":
+            ch.clear_console()
+            if not rw.delete_review(markets_base, current_page):
+                continue
         else:
             ch.clear_console()
             ch.print_command(user_input)
@@ -49,7 +58,7 @@ def page_reviews(page, start, **kwargs):
 
     ch.print_count_market_reviews(len_base, fmid, market_name)
     for i, review in enumerate(page, start=start + 1):
-        ch.print_reviews(i, review) # TODO можно так разбить
+        ch.print_reviews(i, review)
 
 
 def page_search_and_nearby(search_type, page, start, **kwargs):

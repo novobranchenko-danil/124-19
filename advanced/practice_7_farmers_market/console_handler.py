@@ -84,12 +84,18 @@ def print_pagination(total_page, current_page):
 
 
 def print_pagination_description():
-    print("[n] next page  [p] previous page  [q] to return to previous menu  [number] view market details")
+    print("[n] next page  [p] previous page  [number] view market details [q] to return to previous menu")
+    print("> ", end='')
 
+
+def print_pagination_description_reviews():
+    print("[n] next page  [p] previous page  [d] delete reviews [q] to return to previous menu")
+    print("> ", end='')
 
 def print_market_page(index, market):
     indent = " " * (4 - len(str(index)))  # для индексов до 999
     print(f"{index}.{indent} {market['name']:<85} (Avg.rating {market['avg.rating']})")
+
 
 def print_search_mode():
     print("-" * 50)
@@ -255,7 +261,8 @@ def print_invalid_fmid():
 
 
 def print_detail_description():
-    print("[q] back to list [c] leave comment [v] view reviews")
+    print("[q] back to list [c] leave comment [v] view reviews [d] delete")
+    print("> ", end='')
 
 
 def print_detail_information(market, avg_rating):
@@ -302,6 +309,11 @@ def print_invalid_credentials():
     print("Please try again.")
 
 
+def print_invalid_login():
+    print("Error! The username cannot be empty")
+    print("Please try again.")
+
+
 def print_user_not_found():
     print("User not found")
     print("Please check username or register.")
@@ -310,6 +322,15 @@ def print_user_not_found():
 def print_authorization_failed():
     print("Authorization failed")
     print("Please use register or login in main menu to continue")
+
+
+def print_delete_review_failed():
+    print("Cannot delete this review")
+    print("You can only delete reviews that you have written")
+
+
+def print_permission_failed():
+    print("Access denied: insufficient permissions")
 
 
 def print_not_logged_in():
