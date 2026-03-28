@@ -49,7 +49,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Search by FMID</string>
+       <string>Search nearby FMID</string>
       </property>
       <property name="textFormat">
        <enum>Qt::TextFormat::AutoText</enum>

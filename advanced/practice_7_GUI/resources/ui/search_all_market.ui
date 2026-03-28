@@ -113,7 +113,7 @@
           <item>
            <widget class="QPushButton" name="back_page_button">
             <property name="text">
-             <string>← Назад</string>
+             <string>← Back</string>
             </property>
            </widget>
           </item>
@@ -122,12 +122,15 @@
             <property name="text">
              <string>Страница 1/2</string>
             </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="next_page_button">
             <property name="text">
-             <string>&quot;Вперед →</string>
+             <string>Next →</string>
             </property>
            </widget>
           </item>
@@ -148,14 +151,14 @@
           <string/>
          </property>
          <property name="placeholderText">
-          <string>Введите номер рынка для просмотра детализации</string>
+          <string>Enter the market number to view the details</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="search_button">
          <property name="text">
-          <string>Найти</string>
+          <string>Search</string>
          </property>
         </widget>
        </item>

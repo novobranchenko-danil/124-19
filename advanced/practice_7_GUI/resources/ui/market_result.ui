@@ -49,7 +49,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Markets</string>
+       <string>Markets result</string>
       </property>
       <property name="textFormat">
        <enum>Qt::TextFormat::AutoText</enum>
@@ -88,7 +88,7 @@
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,1">
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,1">
        <property name="spacing">
         <number>5</number>
        </property>
@@ -105,36 +105,6 @@
         <widget class="QTableWidget" name="output_table_info"/>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_2">
-         <property name="title">
-          <string/>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QPushButton" name="back_page_button">
-            <property name="text">
-             <string>← Назад</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="pagination_info">
-            <property name="text">
-             <string>Страница 1/2</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="next_page_button">
-            <property name="text">
-             <string>Вперед →</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="QLineEdit" name="number_field_input">
          <property name="font">
           <font>
@@ -148,14 +118,14 @@
           <string/>
          </property>
          <property name="placeholderText">
-          <string>Введите номер рынка для просмотра детализации</string>
+          <string>Enter the market number to view the details</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="search_button">
          <property name="text">
-          <string>Найти</string>
+          <string>Search</string>
          </property>
         </widget>
        </item>

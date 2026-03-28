@@ -26,7 +26,7 @@
      <height>16777215</height>
     </size>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,1">
+   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0">
     <item>
      <spacer name="horizontalSpacer_2">
       <property name="orientation">
@@ -49,7 +49,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Search by FMID</string>
+       <string>Markets result nearby</string>
       </property>
       <property name="textFormat">
        <enum>Qt::TextFormat::AutoText</enum>
@@ -88,13 +88,7 @@
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
-      <property name="checked">
-       <bool>false</bool>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0">
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,1">
        <property name="spacing">
         <number>5</number>
        </property>
@@ -108,22 +102,23 @@
         <number>5</number>
        </property>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+        <widget class="QTableWidget" name="output_table_info"/>
        </item>
        <item>
-        <widget class="QLineEdit" name="fmid_input">
+        <widget class="QLineEdit" name="number_field_input">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="inputMask">
+          <string/>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
          <property name="placeholderText">
-          <string>FMID</string>
+          <string>Enter the market number to view the details</string>
          </property>
         </widget>
        </item>
@@ -133,19 +128,6 @@
           <string>Search</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item>
         <widget class="Line" name="line">

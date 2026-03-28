@@ -88,7 +88,7 @@
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,1">
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1">
        <property name="spacing">
         <number>5</number>
        </property>
@@ -105,39 +105,9 @@
         <widget class="QTableWidget" name="output_table_info"/>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_2">
-         <property name="title">
-          <string/>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QPushButton" name="back_page_button">
-            <property name="text">
-             <string>← Назад</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="pagination_info">
-            <property name="text">
-             <string>Страница 1/2</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="next_page_button">
-            <property name="text">
-             <string>Вперед →</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="leave_review_button">
          <property name="text">
-          <string>Оставить отзыв</string>
+          <string>Leave review</string>
          </property>
         </widget>
        </item>

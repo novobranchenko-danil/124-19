@@ -113,14 +113,14 @@
           <item>
            <widget class="QPushButton" name="view_review_button">
             <property name="text">
-             <string>Посмотреть отзывы</string>
+             <string>View review</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="leave_review_button">
             <property name="text">
-             <string>Оставить отзыв</string>
+             <string>Leave review</string>
             </property>
            </widget>
           </item>

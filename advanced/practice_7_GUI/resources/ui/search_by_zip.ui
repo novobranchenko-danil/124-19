@@ -123,14 +123,14 @@
        <item>
         <widget class="QLineEdit" name="zip_input">
          <property name="placeholderText">
-          <string>Введите почтовый индекс</string>
+          <string>ZIP</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="search_button">
          <property name="text">
-          <string>Найти</string>
+          <string>Search</string>
          </property>
         </widget>
        </item>

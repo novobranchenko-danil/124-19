@@ -123,21 +123,21 @@
        <item>
         <widget class="QLineEdit" name="state_input">
          <property name="placeholderText">
-          <string>Введите штат</string>
+          <string>State</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="city_input">
          <property name="placeholderText">
-          <string>Введите город</string>
+          <string>City</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="search_button">
          <property name="text">
-          <string>Найти</string>
+          <string>Search</string>
          </property>
         </widget>
        </item>

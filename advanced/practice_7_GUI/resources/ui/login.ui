@@ -123,21 +123,21 @@
        <item>
         <widget class="QLineEdit" name="username_input">
          <property name="placeholderText">
-          <string>Введите имя пользователя</string>
+          <string>Username</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="password_input">
          <property name="placeholderText">
-          <string>Введите пароль</string>
+          <string>Password</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="log_in_button">
          <property name="text">
-          <string>Войти</string>
+          <string>Login</string>
          </property>
         </widget>
        </item>

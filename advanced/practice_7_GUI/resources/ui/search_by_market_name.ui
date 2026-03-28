@@ -123,14 +123,14 @@
        <item>
         <widget class="QLineEdit" name="market_name_input">
          <property name="placeholderText">
-          <string>Введите название рынка или его часть</string>
+          <string>Enter market name or part of it  </string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="search_button">
          <property name="text">
-          <string>Найти</string>
+          <string>Search</string>
          </property>
         </widget>
        </item>
